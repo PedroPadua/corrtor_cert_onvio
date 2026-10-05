@@ -1,18 +1,25 @@
 from playwright.sync_api import sync_playwright
 import os
 from dotenv import load_dotenv, find_dotenv
-import csv
-import pandas as pd
+
+
 class PwOnvio:
 
     def __init__(self):
         load_dotenv(find_dotenv())
+        self.init_pw()
+        self.page = self.context.new_page()
+        self.fechado = False
+
+
+    def init_pw(self):
         self.pw = sync_playwright().start()
         self.browser = self.pw.chromium.launch(headless=False)
         self.context = self.browser.new_context(storage_state="pw/onvio_state.json")
-        self.page = self.context.new_page()
-        self.fechado = False
-    
+
+
+
+
     def initial_setup(self):
         self.page.goto("https://onvio.com.br/staff/#/dashboard-core-center")
         self.page.get_by_role("link", name="Menu").click()
@@ -24,7 +31,13 @@ class PwOnvio:
         self.proc.locator("div:nth-child(9) > .c-esMonm > .c-dWgEUF > .c-jmBOhu").click()
         self.proc.get_by_text("Gerenciar").nth(5).click()
         return self.proc
+    
+    def open_emp(self, cnpj):
+        self.proc.get_by_role("textbox", name="Pesquisar por nome").fill(cnpj)
+        self.proc.locator("a.link-to-edit").filter(has_text=cnpj).first.click()
 
+        return self.proc
+            
     def close(self):
         if self.fechado:
             return
