@@ -1,11 +1,12 @@
 from playwright.sync_api import sync_playwright
 from pw.pw_onvio import PwOnvio
-
+from data.prepdf import prep_df
 
 class PwCert(PwOnvio):
 
     def __init__(self):
         super().__init__()
+        self.df = prep_df()
 
     
     def search_certs(self):
