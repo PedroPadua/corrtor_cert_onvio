@@ -1,16 +1,33 @@
 from playwright.sync_api import sync_playwright
 from pw.pw_onvio import PwOnvio
-from data.prepdf import prep_df
+
 
 class PwCert(PwOnvio):
 
     def __init__(self):
         super().__init__()
-        self.df = prep_df()
-
     
-    def search_certs(self):
-        pass
+    def search_certs(self, page, atividade):
+        esperado = " ".join(str(atividade).casefold().split())
+        linhas = page.locator('div[role="row"]')
+
+        for i in range(linhas.count()):
+            linha = linhas.nth(i)
+            celula_nome = linha.locator('div[col-id="name"]')
+
+            if not celula_nome.count():
+                continue
+
+            nome = " ".join(celula_nome.inner_text().casefold().split())
+
+            if nome == esperado:
+                print(f"Atividade encontrada: {atividade}. Clicando na linha {i + 1}.")
+                linha.click()
+                return True
+
+        print(f"Atividade não encontrada: {atividade}")
+        return False
+
 
     def edit_dates(self,page, emp_inf: dict):
 
