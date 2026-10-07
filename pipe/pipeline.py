@@ -5,18 +5,26 @@ class OnvioPipe:
 
     def __init__(self):
         self.cert = PwCert()
-        self.df = prep_df()
+        
 
-    def pipe(self):
-        for _, registro in self.df.iterrows():
-            atividade = registro["tarefa"]
-
-            # O CNPJ já identifica a empresa que deve estar aberta nesta etapa.
-            encontrada = self.cert.search_certs(self.cert.proc, atividade)
-
+    def list_tarefas(self,page, linha_gb):
+        total = len(linha_gb)
+        for indice, (_, registro) in enumerate(linha_gb.iterrows(), start=1):
+            print(f"[{indice}/{total}] Processando atividade: {registro['tarefa']}")
+            encontrada = self.cert.search_certs(page, registro['tarefa'])
             if not encontrada:
                 continue
+            self.cert.edit_dates(page, registro.to_dict())
 
-            # Aqui você usa os demais dados deste mesmo registro,
-            # por exemplo registro["data"], para preencher a informação.
+    def find_emp(self):
+        pass
+
+
+    def pipe(self):
+        df = prep_df()
+        self.cert.initial_setup()
+        for cnpj, linha in df.groupby('cnpj'):
+            page = self.cert.open_emp(str(cnpj))
+            self.list_tarefas(page, linha)
+            self.cert.return_list_emps()
 

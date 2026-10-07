@@ -17,7 +17,13 @@ class PwOnvio:
 
 
     def initial_setup(self):
-        self.page.goto("https://onvio.com.br/staff/#/dashboard-core-center")
+        self.page.goto(
+            "https://onvio.com.br/staff/#/dashboard-core-center",
+            wait_until="domcontentloaded",
+        )
+        self.page.get_by_role("link", name="Menu").wait_for(
+            state="visible", timeout=30_000
+        )
         self.page.get_by_role("link", name="Menu").click()
         with self.page.expect_popup() as popup_info:
             self.page.get_by_role("link", name="Processos").click()
@@ -28,7 +34,7 @@ class PwOnvio:
         self.proc.get_by_text("Gerenciar").nth(5).click()
         return self.proc
     
-    def open_emp(self, cnpj):
+    def open_emp(self, cnpj: str):
         try:
             self.proc.get_by_role("textbox", name="Pesquisar por nome").fill(cnpj)
             self.proc.locator("a.link-to-edit").filter(has_text=cnpj).first.click()
@@ -39,9 +45,6 @@ class PwOnvio:
             raise RuntimeError(f'Falha ao encontrar empresa: {e}')
 
     def return_list_emps(self):
-
-        self.proc.get_by_role("button", name="Cancelar", exact=True).wait_for(state="visible", timeout=10000)
-        self.proc.get_by_role('button', name = 'Cancelar', exact = True).click()
         self.proc.get_by_role("link", name="Clientes", exact=True).click()
 
             
