@@ -7,11 +7,6 @@ class OnvioPipe:
         self.cert = PwCert()
         self.df = prep_df()
 
-    def start_engine(self):
-
-        self.cert.init_pw()
-        self.cert.initial_setup()
-
     def pipe(self):
         for _, registro in self.df.iterrows():
             atividade = registro["tarefa"]

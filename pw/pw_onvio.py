@@ -7,17 +7,13 @@ class PwOnvio:
 
     def __init__(self):
         load_dotenv(find_dotenv())
-        self.init_pw()
-        self.page = self.context.new_page()
         self.fechado = False
-
-
-    def init_pw(self):
         self.pw = sync_playwright().start()
         self.browser = self.pw.chromium.launch(headless=False)
         self.context = self.browser.new_context(storage_state="pw/onvio_state.json")
-
-
+        self.page = self.context.new_page()
+        
+        
 
 
     def initial_setup(self):
@@ -33,10 +29,21 @@ class PwOnvio:
         return self.proc
     
     def open_emp(self, cnpj):
-        self.proc.get_by_role("textbox", name="Pesquisar por nome").fill(cnpj)
-        self.proc.locator("a.link-to-edit").filter(has_text=cnpj).first.click()
+        try:
+            self.proc.get_by_role("textbox", name="Pesquisar por nome").fill(cnpj)
+            self.proc.locator("a.link-to-edit").filter(has_text=cnpj).first.click()
+            self.proc.get_by_role("link", name="Certidões e certificados").click()
+            self.proc.wait_for_timeout(5000)
+            return self.proc
+        except Exception as e:
+            raise RuntimeError(f'Falha ao encontrar empresa: {e}')
 
-        return self.proc
+    def return_list_emps(self):
+
+        self.proc.get_by_role("button", name="Cancelar", exact=True).wait_for(state="visible", timeout=10000)
+        self.proc.get_by_role('button', name = 'Cancelar', exact = True).click()
+        self.proc.get_by_role("link", name="Clientes", exact=True).click()
+
             
     def close(self):
         if self.fechado:

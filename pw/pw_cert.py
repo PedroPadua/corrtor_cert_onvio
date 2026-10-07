@@ -39,6 +39,3 @@ class PwCert(PwOnvio):
             page.keyboard.type(emp_inf['expiracao'], delay=50)
 
         page.get_by_role("button", name="Salvar").click()
-        page.get_by_role("button", name="Cancelar", exact=True).wait_for(state="visible", timeout=10000)
-        page.get_by_role('button', name = 'Cancelar', exact = True).click()
-        page.get_by_role("link", name="Clientes", exact=True).click()
