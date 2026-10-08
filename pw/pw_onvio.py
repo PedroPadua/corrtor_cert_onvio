@@ -1,4 +1,4 @@
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError, sync_playwright
 import os
 from dotenv import load_dotenv, find_dotenv
 
@@ -34,15 +34,25 @@ class PwOnvio:
         self.proc.get_by_text("Gerenciar").nth(5).click()
         return self.proc
     
-    def open_emp(self, cnpj: str):
+    def open_emp(self, nome_empresa: str):
         try:
-            self.proc.get_by_role("textbox", name="Pesquisar por nome").fill(cnpj)
-            self.proc.locator("a.link-to-edit").filter(has_text=cnpj).first.click()
-            self.proc.get_by_role("link", name="Certidões e certificados").click()
+            self.proc.get_by_role("textbox", name="Pesquisar por nome").fill(nome_empresa)
+            empresa = self.proc.locator("a.link-to-edit").filter(
+                has_text=nome_empresa
+            ).first
+            empresa.wait_for(state="visible", timeout=10_000)
+            empresa.click()
+            certificados = self.proc.get_by_role(
+                "link", name="Certidões e certificados"
+            )
+            certificados.wait_for(state="visible", timeout=10_000)
+            certificados.click()
             self.proc.wait_for_timeout(5000)
             return self.proc
-        except Exception as e:
-            raise RuntimeError(f'Falha ao encontrar empresa: {e}')
+        except PlaywrightTimeoutError as erro:
+            raise RuntimeError(
+                f"Tempo esgotado ao localizar {nome_empresa!r} ou abrir Certidões e certificados."
+            ) from erro
 
     def return_list_emps(self):
         self.proc.get_by_role("link", name="Clientes", exact=True).click()
