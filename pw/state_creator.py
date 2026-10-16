@@ -1,0 +1,1 @@
+#playwright codegen --save-storage=onvio_state.json https://onvio.com.br/staff/#/dashboard-core-center

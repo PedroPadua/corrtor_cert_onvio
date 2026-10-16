@@ -51,6 +51,24 @@ class PwCert(PwOnvio):
         erro = None if encontrada else f"Atividade não encontrada no Onvio: {atividade}"
         return {'status': encontrada, 'reps': reps, 'erro': erro}
 
+    def edit_tarefa(self, page, registro):
+        esperado = " ".join(str(registro['tarefa']).casefold().split())
+        linhas = page.locator('.ag-body-container > div[role="row"]')
+
+        for indice in range(linhas.count()):
+            linha = linhas.nth(indice)
+            celula_nome = linha.locator('div[col-id="name"]')
+            if not celula_nome.count():
+                continue
+
+            nome = " ".join(celula_nome.inner_text().strip().casefold().split())
+            if nome == esperado:
+                celula_nome.click()
+                self.edit_dates(page, registro)
+                return True
+
+        print(f"Atividade não encontrada para edição: {registro['tarefa']!r}")
+        return False
 
     def edit_dates(self,page, emp_inf: dict):
 

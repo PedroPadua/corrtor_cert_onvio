@@ -25,9 +25,6 @@ class OnvioPipe:
             relat,
             columns=['emp', 'tarefa', 'status', 'repetições', 'erro']
         )
-    def find_emp(self):
-        pass
-
 
     def pipe(self):
         df = prep_df()
@@ -37,6 +34,15 @@ class OnvioPipe:
             nome_empresa = str(linha['cnpj'].iloc[0])
             try:
                 page = self.cert.open_emp(nome_empresa)
+                print(f'Iniciando processamento da empresa {nome_empresa}')
+                resultado = self.list_tarefas(page, linha)
+                relatorios.append(resultado)
+                for _, registro in linha.iterrows():
+                    self.cert.edit_tarefa(page, registro)
+                self.cert.return_list_emps()
+                df_relat = pd.concat(relatorios, ignore_index=True)
+                df_relat.to_excel('relatório.xlsx', index=False)
+                
             except RuntimeError as erro:
                 mensagem_erro = f"Falha ao abrir {nome_empresa} (CNPJ {cnpj}): {erro}"
                 print(mensagem_erro)
@@ -47,11 +53,3 @@ class OnvioPipe:
                 resultado = resultado[
                     ['emp', 'tarefa', 'status', 'repetições', 'erro']
                 ]
-            else:
-                resultado = self.list_tarefas(page, linha)
-                self.cert.return_list_emps()
-            relatorios.append(resultado)
-            df_relat = pd.concat(relatorios, ignore_index=True)
-            df_relat.to_excel('relatório.xlsx', index=False)
-            print(f"Relatório atualizado após processar a empresa {nome_empresa}.")
-

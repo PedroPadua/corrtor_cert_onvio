@@ -1,5 +1,4 @@
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError, sync_playwright
-import os
 from dotenv import load_dotenv, find_dotenv
 
 
@@ -12,19 +11,34 @@ class PwOnvio:
         self.browser = self.pw.chromium.launch(headless=False)
         self.context = self.browser.new_context(storage_state="pw/onvio_state.json")
         self.page = self.context.new_page()
-        
-        
-
 
     def initial_setup(self):
         self.page.goto(
             "https://onvio.com.br/staff/#/dashboard-core-center",
             wait_until="domcontentloaded",
         )
-        self.page.get_by_role("link", name="Menu").wait_for(
-            state="visible", timeout=30_000
+        # Se a sessão cair, o Onvio redireciona pelo login e volta pra cá — orçamento próprio pra essa cadeia
+        self.page.wait_for_url("**/dashboard-core-center*", timeout=60_000)
+
+        # O toggle do menu pode ser <button> ou <a> conforme a build — cobre os dois e evita strict mode
+        menu = self.page.get_by_role("button", name="Menu").or_(
+            self.page.get_by_role("link", name="Menu")
         )
-        self.page.get_by_role("link", name="Menu").click()
+        try:
+            menu.first.wait_for(state="visible", timeout=30_000)
+        except PlaywrightTimeoutError:
+            # Dump pra cravar o locator certo de uma vez, sem ficar chutando
+            self.page.screenshot(path="pw/debug_menu.png", full_page=True)
+            try:
+                print(self.page.locator("body").aria_snapshot())
+            except AttributeError:
+                print(
+                    "Playwright < 1.49 sem aria_snapshot: "
+                    "rode 'playwright codegen' e inspecione o header."
+                )
+            raise
+        menu.first.click()
+
         with self.page.expect_popup() as popup_info:
             self.page.get_by_role("link", name="Processos").click()
         self.proc = popup_info.value
@@ -33,7 +47,7 @@ class PwOnvio:
         self.proc.locator("div:nth-child(9) > .c-esMonm > .c-dWgEUF > .c-jmBOhu").click()
         self.proc.get_by_text("Gerenciar").nth(5).click()
         return self.proc
-    
+
     def open_emp(self, nome_empresa: str):
         try:
             self.proc.get_by_role("textbox", name="Pesquisar por nome").fill(nome_empresa)
@@ -57,7 +71,6 @@ class PwOnvio:
     def return_list_emps(self):
         self.proc.get_by_role("link", name="Clientes", exact=True).click()
 
-            
     def close(self):
         if self.fechado:
             return
