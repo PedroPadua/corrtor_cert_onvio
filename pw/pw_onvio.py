@@ -17,10 +17,10 @@ class PwOnvio:
             "https://onvio.com.br/staff/#/dashboard-core-center",
             wait_until="domcontentloaded",
         )
-        # Se a sessão cair, o Onvio redireciona pelo login e volta pra cá — orçamento próprio pra essa cadeia
+      
         self.page.wait_for_url("**/dashboard-core-center*", timeout=60_000)
 
-        # O toggle do menu pode ser <button> ou <a> conforme a build — cobre os dois e evita strict mode
+
         menu = self.page.get_by_role("button", name="Menu").or_(
             self.page.get_by_role("link", name="Menu")
         )
